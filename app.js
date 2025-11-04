@@ -13,7 +13,7 @@ async function openCamera() {
         // 1. Definición de Restricciones (Constraints)
         const constraints = {
             video: {
-                facingMode: { ideal: 'environment' }, // Solicita la cámara trasera
+                facingMode: { ideal: 'user' }, // Solicita la cámara trasera
                 width: { ideal: 320 },
                 height: { ideal: 240 }
             }
@@ -79,4 +79,5 @@ takePhotoBtn.addEventListener('click', takePhoto);
 // Limpiar stream cuando el usuario cierra o navega fuera de la página
 window.addEventListener('beforeunload', () => {
     closeCamera();
+
 });
