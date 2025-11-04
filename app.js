@@ -13,7 +13,7 @@ async function openCamera() {
         // 1. Definición de Restricciones (Constraints)
         const constraints = {
             video: {
-                facingMode: { ideal: 'user' }, // Solicita la cámara trasera
+                facingMode: 'user', // Solicita la cámara trasera
                 width: { ideal: 320 },
                 height: { ideal: 240 }
             }
