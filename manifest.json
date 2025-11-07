@@ -1,11 +1,11 @@
 {
-    "name": "mi pwa es de gestion de tareas",
+    "name": "pwa camara",
     "short_name": "gestor PWA",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1A202C",
     "theme:color": "#4A90E2",
-    "desciption": "una aplicacion de raeeas duaruas, funcion offline",
+    "desciption": "una aplicacion para tomar fotos",
     "icons": [
         {
             "src": "./images/192.png",
@@ -18,4 +18,5 @@
             "type": "image/png"
         }
     ]
+
 }
