@@ -1,23 +1,416 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="./manifest.json">
-    <title>camara</title>
+    <title>Galería Temporal con Cámara</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 15px 0;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .camera-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #8a2be2;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            background: #7a1fd2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #a67fd4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #clearGallery {
+            background: #ff4757;
+        }
+        
+        #clearGallery:hover {
+            background: #ff3742;
+        }
+        
+        .camera-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .capture-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        canvas {
+            display: none;
+        }
+        
+        .gallery-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .gallery-title {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        .mini-gallery {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 5px;
+            scrollbar-width: thin;
+            scrollbar-color: #8a2be2 rgba(255, 255, 255, 0.1);
+        }
+        
+        .mini-gallery::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .mini-gallery::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .mini-gallery::-webkit-scrollbar-thumb {
+            background: #8a2be2;
+            border-radius: 10px;
+        }
+        
+        .mini-gallery::-webkit-scrollbar-thumb:hover {
+            background: #7a1fd2;
+        }
+        
+        .gallery-item {
+            flex: 0 0 auto;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .empty-gallery {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.7rem;
+            }
+            
+            .camera-controls, .capture-controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div>
-        <button type="button" id="openCamera">Abrir camara</button>
-
-        <fieldset id="cameraContainer" style="display: none;">
-            <video id="video" autoplay></video>
-            <button type="button" id="takePhoto">Tomar</button>
-        </fieldset>
-
-        <canvas id="canvas"></canvas>
+    <div class="container">
+        <header>
+            <h1>Galería Temporal</h1>
+            <p>Toma fotos y visualízalas en la galería inferior</p>
+        </header>
+        
+        <section class="camera-section">
+            <div class="camera-controls">
+                <button type="button" id="openCamera">Abrir Cámara</button>
+                <button type="button" id="clearGallery">Limpiar Galería</button>
+            </div>
+            
+            <div class="camera-view" id="cameraContainer">
+                <video id="video" autoplay playsinline></video>
+                <div class="capture-controls">
+                    <button type="button" id="takePhoto">Tomar Foto</button>
+                    <button type="button" id="rotateCamera">Girar Cámara</button>
+                    <button type="button" id="closeCamera">Cerrar Cámara</button>
+                </div>
+            </div>
+            
+            <canvas id="canvas"></canvas>
+        </section>
+        
+        <section class="gallery-section">
+            <h2 class="gallery-title">Galería de Fotos</h2>
+            <div class="mini-gallery" id="miniGallery">
+                <div class="empty-gallery">No hay fotos en la galería</div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>Galería Temporal PWA - Las fotos se guardan temporalmente</p>
+        </footer>
     </div>
     
-    <script src="./app.js"></script>
+    <script>
+        // Referencias a elementos del DOM
+        const openCameraBtn = document.getElementById('openCamera');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const video = document.getElementById('video');
+        const takePhotoBtn = document.getElementById('takePhoto');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const rotateCameraBtn = document.getElementById('rotateCamera');
+        const closeCameraBtn = document.getElementById('closeCamera');
+        const clearGalleryBtn = document.getElementById('clearGallery');
+        const miniGallery = document.getElementById('miniGallery');
+        
+        let stream = null;
+        let currentFacingMode = 'environment'; // Cámara trasera por defecto
+        let galleryImages = []; // Array para almacenar las URLs temporales
+        
+        // Cargar galería desde localStorage al iniciar
+        function loadGallery() {
+            const savedGallery = localStorage.getItem('temporalGallery');
+            if (savedGallery) {
+                galleryImages = JSON.parse(savedGallery);
+                updateGalleryDisplay();
+            }
+        }
+        
+        // Guardar galería en localStorage
+        function saveGallery() {
+            localStorage.setItem('temporalGallery', JSON.stringify(galleryImages));
+        }
+        
+        // Actualizar la visualización de la galería
+        function updateGalleryDisplay() {
+            miniGallery.innerHTML = '';
+            
+            if (galleryImages.length === 0) {
+                miniGallery.innerHTML = '<div class="empty-gallery">No hay fotos en la galería</div>';
+                return;
+            }
+            
+            galleryImages.forEach((imageData, index) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                
+                const img = document.createElement('img');
+                img.src = imageData;
+                img.alt = `Foto ${index + 1}`;
+                
+                galleryItem.appendChild(img);
+                miniGallery.appendChild(galleryItem);
+            });
+        }
+        
+        // Abrir cámara
+        async function openCamera() {
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: currentFacingMode },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                cameraContainer.style.display = 'flex';
+                openCameraBtn.disabled = true;
+                
+                console.log('Cámara abierta exitosamente');
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                alert('No se pudo acceder a la cámara. Asegúrate de dar permisos.');
+            }
+        }
+        
+        // Tomar foto
+        function takePhoto() {
+            if (!stream) {
+                alert('Primero debes abrir la cámara');
+                return;
+            }
+            
+            // Ajustar el tamaño del canvas al del video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Dibujar el frame actual del video en el canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convertir a Data URL
+            const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Agregar a la galería
+            galleryImages.push(imageDataURL);
+            
+            // Actualizar la visualización y guardar
+            updateGalleryDisplay();
+            saveGallery();
+            
+            console.log('Foto capturada y agregada a la galería');
+            
+            // Cerrar la cámara después de tomar la foto
+            closeCamera();
+        }
+        
+        // Girar cámara
+        function rotateCamera() {
+            if (!stream) return;
+            
+            // Detener la cámara actual
+            stream.getTracks().forEach(track => track.stop());
+            
+            // Cambiar entre cámara frontal y trasera
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            
+            // Reabrir la cámara con la nueva configuración
+            openCamera();
+        }
+        
+        // Cerrar cámara
+        function closeCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                
+                video.srcObject = null;
+                cameraContainer.style.display = 'none';
+                openCameraBtn.disabled = false;
+                
+                console.log('Cámara cerrada');
+            }
+        }
+        
+        // Limpiar galería
+        function clearGallery() {
+            if (galleryImages.length === 0) {
+                alert('La galería ya está vacía');
+                return;
+            }
+            
+            if (confirm('¿Estás seguro de que quieres eliminar todas las fotos de la galería?')) {
+                galleryImages = [];
+                updateGalleryDisplay();
+                saveGallery();
+                console.log('Galería limpiada');
+            }
+        }
+        
+        // Event listeners
+        openCameraBtn.addEventListener('click', openCamera);
+        takePhotoBtn.addEventListener('click', takePhoto);
+        rotateCameraBtn.addEventListener('click', rotateCamera);
+        closeCameraBtn.addEventListener('click', closeCamera);
+        clearGalleryBtn.addEventListener('click', clearGallery);
+        
+        // Limpiar stream cuando se cierra la página
+        window.addEventListener('beforeunload', () => {
+            closeCamera();
+        });
+        
+        // Cargar la galería al iniciar
+        loadGallery();
+    </script>
 </body>
 </html>
